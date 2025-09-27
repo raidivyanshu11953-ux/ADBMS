@@ -1,0 +1,71 @@
+-- Clean start
+DROP TABLE IF EXISTS FeePayments;
+
+CREATE TABLE FeePayments (
+    payment_id INT PRIMARY KEY,
+    student_name VARCHAR(100) NOT NULL,
+    amount DECIMAL(10,2) NOT NULL CHECK (amount > 0),
+    payment_date DATE NOT NULL
+) ENGINE=InnoDB;
+
+-- ======================
+-- PART A: SUCCESSFUL COMMIT
+-- ======================
+START TRANSACTION;
+INSERT INTO FeePayments (payment_id, student_name, amount, payment_date)
+VALUES
+ (1, 'Ashish',  5000.00, '2024-06-01'),
+ (2, 'Smaran',  4500.00, '2024-06-02'),
+ (3, 'Vaibhav', 5500.00, '2024-06-03');
+COMMIT;
+
+SELECT 'After Part A (3 rows committed)' AS info;
+SELECT * FROM FeePayments;
+
+-- ======================
+-- PART B: FAIL + ROLLBACK
+-- Try one good insert + one bad (duplicate id + negative amount)
+-- This will throw error, so we manually rollback.
+-- ======================
+START TRANSACTION;
+INSERT INTO FeePayments (payment_id, student_name, amount, payment_date)
+VALUES (4, 'Kiran', 4800.00, '2024-06-04');
+
+-- This is invalid: duplicate id=1 AND amount<0, will cause error
+-- Comment/uncomment if your editor stops execution on error.
+-- INSERT INTO FeePayments (payment_id, student_name, amount, payment_date)
+-- VALUES (1, 'Ashish', -100.00, '2024-06-05');
+
+-- Because of error -> rollback
+ROLLBACK;
+
+SELECT 'After Part B (no new rows)' AS info;
+SELECT * FROM FeePayments;
+
+-- ======================
+-- PART C: PARTIAL FAILURE
+-- One valid + one invalid (NULL student_name). Entire transaction rolled back.
+-- ======================
+START TRANSACTION;
+INSERT INTO FeePayments (payment_id, student_name, amount, payment_date)
+VALUES (5, 'Neha', 5100.00, '2024-06-06');
+
+-- Invalid row (NULL name) -> will fail
+-- INSERT INTO FeePayments (payment_id, student_name, amount, payment_date)
+-- VALUES (6, NULL, 5200.00, '2024-06-07');
+
+ROLLBACK;
+
+SELECT 'After Part C (no rows 5 or 6)' AS info;
+SELECT * FROM FeePayments;
+
+-- ======================
+-- PART D: FINAL SUCCESSFUL COMMIT
+-- ======================
+START TRANSACTION;
+INSERT INTO FeePayments (payment_id, student_name, amount, payment_date)
+VALUES (7, 'Meera', 9000.00, '2024-06-08');
+COMMIT;
+
+SELECT 'After Part D (Meera committed)' AS info;
+SELECT * FROM FeePayments;
